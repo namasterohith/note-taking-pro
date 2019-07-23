@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Note-taking App</title>
+</head>
+
+<style>
+    /* Global styles */
+
+    body {
+        background-color: #ddd;
+        font-family: monospace;
+    }
+
+    .container {
+        padding: 5%;
+    }
+
+    button {
+        display: inline-block;
+        border: 1px solid #555;
+        border-radius: 2px;
+        background-color: darkgrey;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: grey;
+    }
+
+    .title {
+        font-weight: normal;
+        line-height: 0px;
+    }
+
+    .title h4 {
+        font-style: italic;
+    }
+
+    /* Cards */
+    .card {
+        display: inline-block;
+        width: 28%;
+        height: 250px;
+        float: left;
+        padding: 10px;
+        margin: 1.5%;
+        border: 2px solid #555;
+        color: #333;
+        border-radius: 5px;
+        transition: all 0.5s;
+    }
+
+    .add {
+        text-align: center;
+        font-weight: 900;
+        border: 1px solid #666;
+        color: #666;
+        cursor: pointer;
+    }
+
+    .add:hover {
+        width: calc(28% - 2px);
+        color: #222;
+        border: 2px solid #222;
+    }
+
+    .add-btn {
+        margin-top: 15%;
+        font-size: 100px;
+    }
+
+    .add-text {
+        font-style: italic;
+    }
+
+    /* Notes */
+    .note-title {
+        font-size: 20px;
+        font-weight: 900;
+        margin-bottom: 10px;
+    }
+
+    .note-text {
+        overflow: auto;
+        height: 200px;
+    }
+
+    .note-footer {
+        text-align: right;
+        float: right;
+    }
+
+    /* Note editor */
+    #note-editor {
+        position: absolute;
+        top: 125px;
+        width: 90%;
+        height: 500px;
+        max-height: 70%;
+        float: left;
+        padding: 10px;
+        border: 2px solid #555;
+        color: #333;
+        border-radius: 5px;
+        box-shadow: 1px 1px 10px black;
+        z-index: 10;
+    }
+
+    #note-editor::backdrop {
+        background: rgba(5, 5, 5, 0.5);
+    }
+
+    #note-editor .label {
+        font-weight: bold;
+        margin: 5px 0;
+    }
+
+    #note-editor input,
+    #note-editor select,
+    #note-editor textarea {
+        width: 99.8%;
+        font-family: monospace;
+    }
+
+    #note-editor textarea {
+        height: 55%;
+    }
+
+    #note-editor button {
+        float: none;
+        position: absolute;
+        right: 5px;
+        bottom: 5px;
+    }
+
+    #note-editor button.cancel {
+        right: 55px;
+    }
+
+
+    /* Mobile */
+    @media only screen and (max-device-width: 767px) {
+        .card {
+            width: 90%;
+            height: 450px;
+        }
+    }
+</style>
+
+<body>
+    <div class="container">
+
+        <!-- Page Header -->
+        <div class="title">
+            <h2>Note-taking Pro</h2>
+            <h4>Now you can manage all your notes here!</h4>
+        </div>
+        <!-- /Page Header -->
+
+        <!-- Add note button -->
+        <div class="card add" onclick="addNote()">
+            <div class="add-btn">+</div>
+            <div class="add-text">Add Note</div>
+        </div>
+        <!-- /Add note button -->
+
+        <!-- Note Editor -->
+        <dialog id="note-editor" style="background-color: white;">
+            <div class="label">Title</div>
+            <input type="text" name="title" id="title" placeholder="Add a title here" />
+
+            <div class="label">Note</div>
+            <textarea name="note" id="note" placeholder="Add note here"></textarea>
+
+            <div class="label">Tag by color</div>
+            <select name="color" id="color" onchange="updateEditorColor()">
+                <option value="white">White</option>
+                <option value="coral">Red</option>
+                <option value="lightgreen">Green</option>
+                <option value="lightblue">Blue</option>
+            </select>
+
+            <button class="save" onclick="saveNote()">
+                Save
+            </button>
+            <button class="cancel" onclick="closeNote()">
+                Cancel
+            </button>
+        </dialog>
+        <!-- /Note Editor -->
+
+        <!-- Notes -->
+        <!-- 
+        <div class="card note" style="background-color: white;">
+            <div class="note-title">
+                Note Title
+            </div>
+            <div class="note-text">
+                Note test text. Quick brown fox jumped over the lazy dog. Lorem Ipsium latin words that mean nothing to
+                occupy some space.
+            </div>
+            <div class="note-footer">
+                <button class="edit" onclick="editNote(0)">
+                    Edit
+                </button>
+                <button class="delete" onclick="deleteNote(0)">
+                    Delete
+                </button>
+            </div>
+        </div>
+-->
+
+    </div>
+
+    <script>
+        // declare a variable to store notes
+        var notes = [];
+
+        // check if you have already stored notes
+        if (localStorage.notes) {
+            notes = JSON.parse(localStorage.notes);
+        }
+        // use a variable to store index to insert the note to.
+        var insert_to_index = 0;
+
+        // function to open the note editor
+        function openNote() {
+            document.querySelector('#note-editor').showModal();
+        }
+
+        // function to open the note editor to add a note
+        function addNote() {
+            insert_to_index = notes.length;
+            // open the note editor
+            openNote();
+        }
+
+        // function to handle the edit button click
+        function editNote(index_to_edit) {
+            // get the note to edit
+            var note = notes[index_to_edit];
+            // load note editor with editable values
+            document.querySelector('#note-editor #title').value = note.title;
+            document.querySelector('#note-editor #note').value = note.note;
+            document.querySelector('#note-editor #color').value = note.color;
+            // update the editor color
+            updateEditorColor();
+            insert_to_index = index_to_edit;
+            // open the note editor
+            openNote();
+        }
+
+        // function to render the notes to view
+        function renderNotes() {
+
+            // delete all existing notes from the view
+            document.querySelectorAll(".card.note").forEach(element => element.parentNode.removeChild(element));
+
+            // get the container element to add notes to
+            var parent = document.querySelector('.container');
+
+            // set each node
+            for (var i in notes) {
+
+                // create the parent card 
+                var note_element = document.createElement('div');
+                note_element.className = 'card note';
+                note_element.style = `background-color: ${notes[i].color};`;
+
+                // set the child template and load with values
+                var note_content = `
+                                <div class="note-title">
+                                    ${notes[i].title}
+                                </div>
+                                <div class="note-text">
+                                    ${notes[i].note}
+                                </div>
+                                <div class="note-footer">
+                                    <button class="edit" onclick="editNote(${i})">
+                                        Edit
+                                    </button>
+                                    <button class="delete" onclick="deleteNote(${i})">
+                                        Delete
+                                    </button>
+                                </div>
+                            `.trim();
+
+                // set the template to the note
+                note_element.innerHTML = note_content;
+
+                // set the note to the parent card
+                parent.appendChild(note_element);
+
+            }
+        }
+
+        // function to handle close button click
+        function closeNote() {
+            // clear form values
+            document.querySelector('#note-editor #title').value = "";
+            document.querySelector('#note-editor #note').value = "";
+            document.querySelector('#note-editor #color').value = "white";
+            // update the editor color
+            updateEditorColor();
+            // close the note editor
+            document.querySelector('#note-editor').close();
+        }
+
+        // function to save notes to localstorage
+        function updateNotes() {
+            localStorage.notes = JSON.stringify(notes);
+            // render the newly saved notes
+            renderNotes();
+        }
+
+        // function to add a note object to the notes array and save it to localstorage
+        function addNoteToNotes(index_to_add, note) { 
+            notes[index_to_add] = note;
+            updateNotes();
+        }
+
+        // function to remove a note object from the notes array and save it to localstorage
+        function removeNoteFromNotes(index_to_remove) { 
+            notes.splice(Number(index_to_remove),1);
+            updateNotes();
+        }
+
+        // function to handle the delete button click on the note
+        function deleteNote(index_to_delete) {
+            // show a confirm message to proceed
+            var confirmDelete = confirm("You are going to delete this note!");
+            // User clicks 'OK'
+            if (confirmDelete == true) {
+                removeNoteFromNotes(index_to_delete);
+            }
+        }
+
+        // function to handle the save button click on the note
+        function saveNote() {
+            // read the values to be saved and create the not object to be saved
+            var not_to_save = {
+                title: document.querySelector('#note-editor #title').value,
+                note: document.querySelector('#note-editor #note').value,
+                color: document.querySelector('#note-editor #color').value
+            }
+
+            // validation for values
+            var valid = Object.values(not_to_save).every(item => (item && item!= ""));
+            if (valid) {
+
+                // proceeds to save
+                addNoteToNotes(insert_to_index, not_to_save);
+                closeNote();
+                renderNotes();
+
+            } else {
+                alert("Oops! Have you missed to fill something?");
+            }
+        }
+
+        // function to update the bg color of the note editor
+        function updateEditorColor(){
+            // readas the color
+            var color = document.querySelector('#note-editor #color').value;
+            document.querySelector('#note-editor').style = `background-color: ${color}`;
+        }
+
+        // Functions to be called on pageload for initializing the view
+        renderNotes();
+        updateEditorColor();
+
+    </script>
+
+</body>
+
+</html>
